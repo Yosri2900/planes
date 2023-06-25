@@ -26,4 +26,44 @@ class AirCanBot(uc.Chrome):
 
   def scrape_home_page(self):
     self.get(const.AIR_CANADA_HOME_PAGE)
-    self.set_window_size(800, 800)
+    self.set_window_size(800, 600)
+    time.sleep(2)
+    self.select_destinations()
+
+  def select_destinations(self, start: str = None, to: str = None):
+    # from_location1 = WebDriverWait(self, 5).until(
+    #   EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
+    # )
+    from_location = WebDriverWait(self, 30).until(
+    EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
+    )
+    from_location.clear()
+    from_text = "Montr"
+    for char in from_text:
+      from_location.send_keys(char)
+      # driver.implicitly_wait(0.5)
+      time.sleep(0.5)
+    self.execute_script("window.scrollTo(0, 700)")
+    self.maximize_window()
+    time.sleep(0.2)
+    # WebDriverWait(self, 30).until(
+    #   EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]'))
+    # ).click()
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]').click()
+
+    to_location = WebDriverWait(self, 30).until(
+      EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
+    )
+    to_location.clear()
+    to_text = "Tuni"
+    for char in to_text:
+      to_location.send_keys(char)
+      # driver.implicitly_wait(0.5)
+      time.sleep(0.5)
+    time.sleep(0.2)
+    self.implicitly_wait(2)
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
+    time.sleep(2)
+
+    # while True:
+    #   pass

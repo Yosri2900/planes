@@ -126,11 +126,11 @@ if __name__ == '__main__':
 
   # ------------------------------------------------------------------------------------------
   # confirm selection
-  time.sleep(0.5)
-  confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
-  driver.implicitly_wait(2)
-  confirm_btn.click()
-  time.sleep(2)
+  # time.sleep(0.5)
+  # confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
+  # driver.implicitly_wait(2)
+  # confirm_btn.click()
+  # time.sleep(2)
   # ------------------------------------------------------------------------------------------
   # searching results
   # driver.execute_script("window.scrollBy(0, 0)")
