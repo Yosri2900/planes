@@ -5,10 +5,8 @@ url = "https://www.aircanada.com/ca/en/aco/home/app.html#/search?org1=YUL&dest1=
 
 
 def test_json(response, results):
-    try:
-        results.append({"url": response.url, "data": response.json()})
-    except:
-        pass
+    results.append({"url": response.url, "data": response.json()})
+
 
 
 def get_cookie_playwright():

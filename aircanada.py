@@ -2,27 +2,8 @@ import csv
 import httpx
 import asyncio
 from bs4 import BeautifulSoup
-import requests
+import requests, time
 from requests_html import HTMLSession
-
-url = "https://www.aircanada.com/ca/en/aco/home/app.html#/search?org1=YUL&dest1=TUN&orgType1=A&destType1=A&org2=TUN&dest2=YUL&orgType2=A&destType2=A&departure1=29%2F07%2F2023&departure2=28%2F08%2F2023&marketCode=INT&numberOfAdults=3&numberOfYouth=1&numberOfChildren=1&numberOfInfants=0&numberOfInfantsOnSeat=0&tripType=R&isFlexible=false"
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, '
-                         'like Gecko) Chrome/114.0.0.0 Safari/537.36'}
-session = HTMLSession()
-r = session.get(url, headers=headers)
-print(r.status_code)
-if r.ok:
-  r.html.render(sleep=5)
-  soup = BeautifulSoup(r.content, 'lxml')
-# class_="itinerary-info-ctr itinerary-body large-info-ctr new-purc-itinerary ng-star-inserted"
-print(soup.find_all('div', class_='display-on-hover'))
-print(soup.prettify())
-
-# with httpx.Client() as s:
-#   r = s.get(url, headers=headers)
-#   print(r.text)
-# -------------------------------------------------------------------------------------------------------------
-# trying out selenium
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium import webdriver
@@ -30,26 +11,98 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+import undetected_chromedriver as uc
 
+HOME_PAGE = "https://www.aircanada.com/ca/en/aco/home.html"
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, '
+                         'like Gecko) Chrome/114.0.0.0 Safari/537.36', 'Accept-Language': 'en'}
 
-def get_data(url: str):
-  opts = Options()
-  opts.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, '
-                    'like Gecko) Chrome/114.0.0.0 Safari/537.36')
-
-  driver = Chrome(options=opts)
-  driver.get(url)
-  # try:
-  #   myElem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cabinBtnECO30Content"]/div/div/div[2]/div[1]')))
-  #   time.sleep(15)
-  #   print("Page is ready!")
-  # except TimeoutException:
-  #   print("Loading took too much time!")
-  # finally:
-  #   driver.quit()
-
-  myElem = WebDriverWait(driver, 60).until(
-    EC.presence_of_element_located((By.XPATH, '//*[@id="cabinBtnECO30Content"]/div/div/div[2]/div[1]')))
 
 if __name__ == '__main__':
-  data = get_data(url)
+  #scraping with selenium
+  options = webdriver.ChromeOptions()
+  options.add_argument('proxy-server=106.122.8.54.3128')
+  # options.add_argument(r'--user-data-dir=C:\Users\yosri\AppData\Local\Google\Chrome\User Data\Default')
+
+  # driver = webdriver.Chrome(ChromeDriverManager().install(), options=opts)
+  driver = uc.Chrome(options=options)
+  driver.get(HOME_PAGE)
+  driver.set_window_size(800, 600)
+  time.sleep(2)
+
+  # -------------------------------------------------------------------------------------------
+  # selecting from location
+  from_location1 = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
+  )
+  from_location1.clear()
+  from_text = "Montr"
+  for char in from_text:
+    from_location1.send_keys(char)
+    # driver.implicitly_wait(0.5)
+    time.sleep(0.5)
+  scroll_down = driver.execute_script("window.scrollTo(0, 550)")
+  driver.maximize_window()
+  time.sleep(0.2)
+  # driver.implicitly_wait(2)
+  driver.find_element(By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]').click()
+
+  # ------------------------------------------------------------------------------------------
+  # selecting to location
+  to_location1 = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
+  )
+  to_location1.clear()
+  to_text = "Tuni"
+  for char in to_text:
+    to_location1.send_keys(char)
+    # driver.implicitly_wait(0.5)
+    time.sleep(0.5)
+  time.sleep(0.2)
+  driver.implicitly_wait(2)
+  driver.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
+  time.sleep(2)
+  # ------------------------------------------------------------------------------------------
+  #selecting from date
+  calendar_button = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-showCalendar"]')
+  calendar_button.click()
+  time.sleep(2)
+
+  # June 25
+  month_start = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[1]/table/tr[6]/td[1]')
+  month_start.click()
+  time.sleep(2)
+  # print(month_start.get_attribute("data-date"))
+
+  # ------------------------------------------------------------------------------------------
+  # selection to date
+  # july 30
+  month_return = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[2]/table/tr[7]/td[1]')
+  month_return.click()
+  time.sleep(2)
+  # driver.implicitly_wait(2)
+
+  confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_confirmDates"]')
+  # driver.implicitly_wait(2)
+  time.sleep(2)
+  confirm_btn.click()
+  # driver.implicitly_wait(2)
+  time.sleep(2)
+  driver.execute_script("window.scrollBy(0, 0)")
+
+  search_flight = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
+  search_flight.click()
+  title = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.XPATH, '//*[@id="flightBlockMainTitle"]'))
+  )
+  # for i in range(10):
+  #   driver.execute_script("window.scrollTo(0, 600);")
+  #   driver.implicitly_wait(i+1)
+  # print(title.text)
+  driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+  while (True):
+    pass
+
+  # driver.quit()
