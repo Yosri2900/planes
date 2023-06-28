@@ -126,11 +126,11 @@ if __name__ == '__main__':
 
   # ------------------------------------------------------------------------------------------
   # confirm selection
-  # time.sleep(0.5)
-  # confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
-  # driver.implicitly_wait(2)
-  # confirm_btn.click()
-  # time.sleep(2)
+  time.sleep(0.5)
+  confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
+  driver.implicitly_wait(2)
+  confirm_btn.click()
+  time.sleep(2)
   # ------------------------------------------------------------------------------------------
   # searching results
   # driver.execute_script("window.scrollBy(0, 0)")
@@ -145,12 +145,12 @@ if __name__ == '__main__':
   # print(title.text)
   # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
   # ------------------------------------------------------------------------------------------
-  # driver.implicitly_wait(10)
-  # resultSet = WebDriverWait(driver, 10).until(
-  #   EC.element_to_be_clickable((By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')))
-  # time.sleep(0.1)
-  # options = resultSet.find_elements(By.TAG_NAME, 'li')
-  # for option in options:
-  #   print(option.text)
+  driver.implicitly_wait(10)
+  resultSet = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')))
+  time.sleep(0.1)
+  options = resultSet.find_elements(By.TAG_NAME, 'li')
+  for option in options:
+    print(option.text)
   while (True):
     pass
