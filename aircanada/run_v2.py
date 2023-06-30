@@ -72,17 +72,21 @@ if __name__ == '__main__':
   driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_clearDates"]').click()
   driver.implicitly_wait(0.6)
 
-  # June 25
-  month_start = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[1]/table/tr[6]/td[6]')
-  month_start.click()
+  # August 26
+  # DD/MM/YYYY
+  # month_start = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[1]/table/tr[6]/td[6]')
+  # month_start.click()
+  month_start = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]')
+  month_start.send_keys("26/08")
   time.sleep(2)
-  # print(month_start.get_attribute("data-date"))
 
   # ------------------------------------------------------------------------------------------
   # selection to date
-  # july 30
-  month_return = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[2]/table/tr[7]/td[1]')
-  month_return.click()
+  # September 17
+  # month_return = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogBody"]/abc-calendar/div/abc-calendar-month[2]/table/tr[7]/td[1]')
+  # month_return.click()
+  month_return = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-2"]')
+  month_return.send_keys("17/09")
   time.sleep(2)
   # driver.implicitly_wait(2)
   # print(month_start.get_attribute("data-date"))
@@ -126,11 +130,11 @@ if __name__ == '__main__':
 
   # ------------------------------------------------------------------------------------------
   # confirm selection
-  time.sleep(0.5)
-  confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
-  driver.implicitly_wait(2)
-  confirm_btn.click()
-  time.sleep(2)
+  # time.sleep(0.5)
+  # confirm_btn = driver.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]')
+  # driver.implicitly_wait(2)
+  # confirm_btn.click()
+  # time.sleep(2)
   # ------------------------------------------------------------------------------------------
   # searching results
   # driver.execute_script("window.scrollBy(0, 0)")
@@ -145,12 +149,14 @@ if __name__ == '__main__':
   # print(title.text)
   # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
   # ------------------------------------------------------------------------------------------
-  driver.implicitly_wait(10)
-  resultSet = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')))
-  time.sleep(0.1)
-  options = resultSet.find_elements(By.TAG_NAME, 'li')
-  for option in options:
-    print(option.text)
+
+
+  # driver.implicitly_wait(10)
+  # resultSet = WebDriverWait(driver, 10).until(
+  #   EC.element_to_be_clickable((By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')))
+  # time.sleep(0.1)
+  # options = resultSet.find_elements(By.TAG_NAME, 'li')
+  # for option in options:
+  #   print(option.text)
   while (True):
     pass
