@@ -1,13 +1,14 @@
 import undetected_chromedriver
 import aircanada.constants as const
-import time
+from time import sleep
 import undetected_chromedriver as uc
 from requests_html import HTMLSession
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as Ec
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
 from selenium import webdriver
@@ -24,77 +25,153 @@ class AirCanBot(uc.Chrome):
     # self.options.add_experimental_option('detach', True)
     # not sure how to handle the options for now
     super(AirCanBot, self).__init__(options=self.options)
-
-  def set_trip_type(self, type: str):
-    self.trip_type = type
-
-  def scrape_home_page(self):
     self.get(const.AIR_CANADA_HOME_PAGE)
     self.set_window_size(800, 600)
-    time.sleep(2)
-    if self.trip_type != "Round-trip":
-      self.select_trip_type()
+    sleep(2)
 
-    self.select_destinations()
-    self.select_date_period("26/08", "17/09")
+  def scrape(self):
 
+    if self.trip_type == "Round-trip":
+      self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="26/08", to_date="17/09")
 
-  def select_trip_type(self):
-    if self.trip_type == "One-way":
-      self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]').click()
+    elif self.trip_type == "One-way":
+      self.scrape_one_way_trip(start_airport="YUL", to_airport="TUN", from_date="26/08")
+
     elif self.trip_type == "Multi-city/Stopover":
-      self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_M"]').click()
+      print("TODO")
+      self.scrape_multi_city_trip()
 
-  def select_destinations(self, start: str = None, to: str = None):
-    # from_location1 = WebDriverWait(self, 5).until(
-    #   EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
-    # )
-    from_location = WebDriverWait(self, 30).until(
-    EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
+  def scrape_round_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
+                          to_date: str = None):
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]')
+    from_location = WebDriverWait(self, 3).until(
+      Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
     )
     from_location.clear()
     from_text = "Montr"
     for char in from_text:
       from_location.send_keys(char)
-      # driver.implicitly_wait(0.5)
-      time.sleep(0.5)
+      sleep(0.5)
+
     self.execute_script("window.scrollTo(0, 700)")
     self.maximize_window()
-    time.sleep(0.2)
-    # WebDriverWait(self, 30).until(
-    #   EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]'))
-    # ).click()
+    sleep(0.2)
+
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]').click()
 
-    to_location = WebDriverWait(self, 30).until(
-      EC.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
+    to_location = WebDriverWait(self, 3).until(
+      Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
     )
-    to_location.clear()
+
     to_text = "Tuni"
     for char in to_text:
       to_location.send_keys(char)
-      # driver.implicitly_wait(0.5)
-      time.sleep(0.5)
-    time.sleep(0.2)
-    self.implicitly_wait(2)
+      sleep(0.5)
+    sleep(0.2)
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
-    time.sleep(2)
+    # sleep(2)
 
-    # while True:
-    #   pass
-
-  def select_date_period(self, begin: str, end: str):
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]').click()
-    time.sleep(0.4)
-    self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_clearDates"]').click()
+    sleep(0.4)
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_clearDates"]').click()
 
     # aircanada accepts DD/MM/YYYY, but YYYY is not necessary
     month_start = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]')
-    month_start.send_keys(begin)
+    month_start.send_keys(from_date)
 
     month_return = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-2"]')
-    month_return.send_keys(end)
+    month_return.send_keys(to_date)
 
     select_period = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_confirmDates"]')
     select_period.click()
+    sleep(0.1)
+
+    # search the results
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]').click()
+
+    title = WebDriverWait(self, 10).until(
+      Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
+    )
+    print(f'title: {title.text}')
+    if title.text == "Departing flight":
+      result_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
+      options = result_set.find_elements(By.TAG_NAME, 'li')
+      if len(options) > 0:
+        for option in options:
+          print(option.text)
+          self.find_element(By.CLASS_NAME, 'btn cabin-btn cabinButton_ECO ECO cabin-hover-display').click()
+          sleep(0.3)
+          self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table')
+          sleep(0.6)
+          self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table/tr[8]/td[2]/fare-family-element-footer/div/button').click()
+          return_title = WebDriverWait(self, 10).until(
+            Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
+          )
+          if return_title.text == "Return flight":
+            return_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
+            return_options = return_set.find_elements(By.TAG_NAME, 'li')
+            if len(return_options) > 0:
+              try:
+                for opt in return_options:
+                  self.find_element(By.CLASS_NAME, 'btn cabin-btn cabinButton_ECO ECO cabin-hover-display').click()
+                  sleep(0.3)
+                  self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table')
+                  sleep(0.6)
+                  self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table/tr[8]/td[2]/fare-family-element-footer/div/button').click()
+              except:
+                continue
+
+
+
+  def scrape_one_way_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None):
+    # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
+    # self.__init__(trip_type="One-way")
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]').click()
+    from_location = WebDriverWait(self, 3).until(
+      Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
+    )
+    from_location.clear()
+    from_text = "Montr"
+    for char in from_text:
+      from_location.send_keys(char)
+      sleep(0.5)
+
+    self.execute_script("window.scrollTo(0, 700)")
+    self.maximize_window()
+    sleep(0.2)
+
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_origin_trip_1SearchResult1"]').click()
+
+    to_location = WebDriverWait(self, 3).until(
+      Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
+    )
+
+    to_text = "Tuni"
+    for char in to_text:
+      to_location.send_keys(char)
+      sleep(0.5)
+    sleep(0.2)
+
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
+    sleep(0.2)
+
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1"]').click()
+    sleep(0.4)
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_clearDates"]').click()
+
+    # aircanada accepts DD/MM/YYYY, but YYYY is not necessary
+    month_start = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1"]')
+    month_start.send_keys(from_date)
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1AbcCalendarDialogCloseButton"]').click()
+
+    sleep(0.1)
+    # search flights
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]').click()
+
+  def scrape_multi_city_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
+                             to_date: str = None):
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_M"]').click()
+    pass
+
+  def set_trip_type(self, trip_type: str):
+    self.trip_type = type
