@@ -94,32 +94,30 @@ class AirCanBot(uc.Chrome):
     )
     print(f'title: {title.text}')
     if title.text == "Departing flight":
-      result_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
-      options = result_set.find_elements(By.TAG_NAME, 'li')
-      if len(options) > 0:
-        for option in options:
-          print(option.text)
-          self.find_element(By.CLASS_NAME, 'btn cabin-btn cabinButton_ECO ECO cabin-hover-display').click()
-          sleep(0.3)
-          self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table')
-          sleep(0.6)
-          self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table/tr[8]/td[2]/fare-family-element-footer/div/button').click()
-          return_title = WebDriverWait(self, 10).until(
-            Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
-          )
-          if return_title.text == "Return flight":
-            return_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
-            return_options = return_set.find_elements(By.TAG_NAME, 'li')
-            if len(return_options) > 0:
-              try:
-                for opt in return_options:
-                  self.find_element(By.CLASS_NAME, 'btn cabin-btn cabinButton_ECO ECO cabin-hover-display').click()
-                  sleep(0.3)
-                  self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table')
-                  sleep(0.6)
-                  self.find_element(By.XPATH, '//*[@id="main-fare-element-container"]/table/tr[8]/td[2]/fare-family-element-footer/div/button').click()
-              except:
-                continue
+      i = 0
+      btns = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
+      print(f'btns length: {len(btns)}')
+      for btn in btns:
+        btn.click()
+        i += 1
+        table_rows = self.find_elements(By.CSS_SELECTOR, 'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
+        for row in table_rows:
+          print(row.text)
+
+      self.find_element(By.CSS_SELECTOR, 'button.no-style-btn').click()
+      print("------Return Flights----------------")
+      return_title = WebDriverWait(self, 10).until(
+        Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
+      )
+      if return_title.text == "Return flight":
+        btns_return = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
+        for btn_return in btns_return:
+          btn_return.click()
+          table_rows = self.find_elements(By.CSS_SELECTOR, 'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
+          for row in table_rows:
+            print(row.text)
+      self.quit()
+
 
 
 
