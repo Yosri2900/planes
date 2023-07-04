@@ -42,7 +42,7 @@ class AirCanBot(uc.Chrome):
       self.scrape_multi_city_trip()
 
   def scrape_round_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
-                          to_date: str = None):
+                        to_date: str = None):
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]')
     from_location = WebDriverWait(self, 3).until(
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
@@ -93,14 +93,18 @@ class AirCanBot(uc.Chrome):
       Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
     )
     print(f'title: {title.text}')
+    results = []
     if title.text == "Departing flight":
-      i = 0
+      result_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
+      options = result_set.find_elements(By.TAG_NAME, 'li')
+      for option in options:
+        print(option.text, end="\n ")
       btns = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
       print(f'btns length: {len(btns)}')
       for btn in btns:
         btn.click()
-        i += 1
-        table_rows = self.find_elements(By.CSS_SELECTOR, 'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
+        table_rows = self.find_elements(By.CSS_SELECTOR,
+                                        'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
         for row in table_rows:
           print(row.text)
 
@@ -113,13 +117,11 @@ class AirCanBot(uc.Chrome):
         btns_return = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
         for btn_return in btns_return:
           btn_return.click()
-          table_rows = self.find_elements(By.CSS_SELECTOR, 'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
+          table_rows = self.find_elements(By.CSS_SELECTOR,
+                                          'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
           for row in table_rows:
             print(row.text)
       self.quit()
-
-
-
 
   def scrape_one_way_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None):
     # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
