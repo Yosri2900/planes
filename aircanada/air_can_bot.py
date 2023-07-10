@@ -1,18 +1,16 @@
-import undetected_chromedriver
+import selenium
 import aircanada.constants as const
 from time import sleep
 import undetected_chromedriver as uc
-from requests_html import HTMLSession
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as Ec
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
+import re
 
 
 class AirCanBot(uc.Chrome):
@@ -43,7 +41,7 @@ class AirCanBot(uc.Chrome):
 
   def scrape_round_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
                         to_date: str = None):
-    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]')
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]').click()
     from_location = WebDriverWait(self, 3).until(
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
     )
@@ -93,35 +91,56 @@ class AirCanBot(uc.Chrome):
       Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
     )
     print(f'title: {title.text}')
-    results = []
     if title.text == "Departing flight":
-      result_set = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
-      options = result_set.find_elements(By.TAG_NAME, 'li')
-      for option in options:
-        print(option.text, end="\n ")
-      btns = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
-      print(f'btns length: {len(btns)}')
-      for btn in btns:
-        btn.click()
-        table_rows = self.find_elements(By.CSS_SELECTOR,
-                                        'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
-        for row in table_rows:
-          print(row.text)
+      #scraping details of flights
+      ul_tag = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
+      tickets = ul_tag.find_elements(By.TAG_NAME, 'li')
+      if len(tickets) > 0:
+        ticket_number = 0
+        for ticket in tickets:
+          layovers = []
+          details = ''
+          num: int = 0
+          num_2: int = 1
+          while True:
+            try:
+              layovers_duration = self.find_element(By.XPATH, f'//*[@id="flightBlockWrapper"]/div[2]/div/ul/li[{ticket_number+1}]/flight-row/div/div/div/div[1]/bound-itinerary/div[3]/div/div/div[2]/div[{num_2}]/span/span[2]')
+              stopovers_airports = self.find_element(By.CSS_SELECTOR, f'span[id^=itineraryConnectingLocation_{num}_{ticket_number}]')
+              layovers.append((stopovers_airports.text, layovers_duration.text))
+              num += 1
+              num_2 += 1
+            except selenium.common.exceptions.NoSuchElementException:
+              num = 0
+              num_2 = 1
+              break
 
+          if len(layovers) == 0:
+            details = 'Non-stop'
+
+          depart_time = self.find_element(By.CSS_SELECTOR, f'div[id^=itineraryDepartTime_{ticket_number}]')
+          arrival_time = self.find_element(By.CSS_SELECTOR, f'div[id^=itineraryArrivalTime_{ticket_number}]')
+          flight_duration = self.find_element(By.CSS_SELECTOR, f'span[id^=flightDuration_{ticket_number}] :nth-child(2)')
+
+          tickets_price = ticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
+          prices = [price.text for price in tickets_price]
+
+          print(f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, layovers: {details},  flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
+          ticket_number += 1
       self.find_element(By.CSS_SELECTOR, 'button.no-style-btn').click()
       print("------Return Flights----------------")
-      return_title = WebDriverWait(self, 10).until(
-        Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
-      )
-      if return_title.text == "Return flight":
-        btns_return = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
-        for btn_return in btns_return:
-          btn_return.click()
-          table_rows = self.find_elements(By.CSS_SELECTOR,
-                                          'table > tr:last-child > td:not(:first-child) button.no-style-btn div.btn-value span')
-          for row in table_rows:
-            print(row.text)
-      self.quit()
+      # return_title = WebDriverWait(self, 10).until(
+      #   Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
+      # )
+      # if return_title.text == "Return flight":
+      #   btns_return = self.find_elements(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]')
+      #   for btn_return in btns_return:
+      #     btn_return.click()
+      #     table_rows = self.find_elements(By.CSS_SELECTOR,
+      #                                     'table > tr:last-child > td:not(:first-child) button.no-style-btn '
+      #                                     'div.btn-value span')
+      #     for row in table_rows:
+      #       print(row.text)
+      # self.quit()
 
   def scrape_one_way_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None):
     # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
