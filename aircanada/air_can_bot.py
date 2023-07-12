@@ -30,7 +30,7 @@ class AirCanBot(uc.Chrome):
   def scrape(self):
 
     if self.trip_type == "Round-trip":
-      self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="26/07", to_date="20/08")
+      self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="28/09", to_date="27/10")
 
     elif self.trip_type == "One-way":
       self.scrape_one_way_trip(start_airport="YUL", to_airport="TUN", from_date="26/08")
@@ -76,10 +76,12 @@ class AirCanBot(uc.Chrome):
     # aircanada accepts DD/MM/YYYY, but YYYY is not necessary
     month_start = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]')
     month_start.send_keys(from_date)
-
+    # print(f'from date: {from_date}')
+    # sleep(0.2)
     month_return = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-2"]')
     month_return.send_keys(to_date)
-
+    # print(f'to date: {to_date}')
+    # sleep(0.1)
     select_period = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_confirmDates"]')
     select_period.click()
     sleep(0.1)
@@ -97,9 +99,9 @@ class AirCanBot(uc.Chrome):
       tickets = ul_tag.find_elements(By.TAG_NAME, 'li')
       if len(tickets) > 0:
         ticket_number = 0
-        layovers = []
         details = ''
         for ticket in tickets:
+          layovers = []
           num: int = 0
           num_2: int = 1
           while True:
@@ -141,9 +143,9 @@ class AirCanBot(uc.Chrome):
         rtickets = rul_tag.find_elements(By.TAG_NAME, 'li')
         if len(rtickets) > 0:
           rticket_number = 0
-          rlayovers = []
           rdetails = ''
           for rticket in rtickets:
+            rlayovers = []
             num: int = 0
             num_2: int = 1
             while True:
