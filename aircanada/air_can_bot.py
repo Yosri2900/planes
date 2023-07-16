@@ -102,6 +102,10 @@ class AirCanBot(uc.Chrome):
       Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
     )
     print(f'title: {title.text}')
+    dinfos = []
+    rinfos = []
+    # dtickets = dict()
+    # ttickets = dict()
     if title.text == "Departing flight":
       #scraping details of flights
       ul_tag = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
@@ -130,10 +134,17 @@ class AirCanBot(uc.Chrome):
 
           tickets_price = ticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
           prices = [price.text for price in tickets_price]
+          dinfos.append({
+            'Depart Time': depart_time,
+            'Arrival Time': arrival_time,
+            'Flight Duration': flight_duration,
+            'Layovers Infos': layovers,
+            'Prices': prices
+          })
 
           print(f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
           ticket_number += 1
-      print("Here")
+
       self.find_element(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]').click()
       sleep(0.2)
       self.find_element(By.CSS_SELECTOR, 'button.no-style-btn').click()
@@ -179,11 +190,21 @@ class AirCanBot(uc.Chrome):
 
             rtickets_price = rticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
             rprices = [price.text for price in rtickets_price]
-
+            rinfos.append({
+              'Depart Time': rdepart_time,
+              'Arrival Time': rarrival_time,
+              'Flight Duration': rflight_duration,
+              'Layovers Infos': rlayovers,
+              'Prices': rprices
+            })
             print(
               f'departtime :{rdepart_time.text}, arrival_time: {rarrival_time.text}, flightduration: {rflight_duration.text}, {len(rlayovers)} stopovers: {rlayovers}, prices: {rprices}')
             rticket_number += 1
         print('Done!')
+        return dinfos, rinfos
+      # return dictionaries here
+      return dinfos, None
+    return None, None
 
   def scrape_one_way_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None):
     # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
