@@ -39,7 +39,8 @@ class TunisairBot(uc.Chrome):
       print("TODO")
       self.scrape_multi_city_trip()
 
-  def scrape_round_trip(self, from_location:str =None, to_location:str =None, from_date:str =None, to_date: str=None):
+  def scrape_round_trip(self, from_location: str = None, to_location: str = None, from_date: str = None,
+                        to_date: str = None):
     self.find_element(By.XPATH, '//*[@id="lignesearch"]/input[2]').click()
     # This option can later be specified by the user
     from_location = "Montreal"
@@ -49,26 +50,77 @@ class TunisairBot(uc.Chrome):
       Ec.presence_of_element_located((By.CSS_SELECTOR, 'select[id="input_list_res"]'))
     )
     fdd = Select(self.find_element(By.CSS_SELECTOR, 'select[id="input_list_res"]'))
-    fdd.select_by_visible_text(from_location)
 
-    # WebDriverWait(self, 3).until(
-    #   Ec.presence_of_element_located((By.CSS_SELECTOR, 'select[name=E_LOCATION_1]'))
-    # )
+    fdd.select_by_visible_text(const.TUNISAIR_AIRPORT.get(from_location))
+
     tdd = Select(self.find_element(By.CSS_SELECTOR, 'select[name=E_LOCATION_1]'))
-    tdd.select_by_visible_text(to_location)
-    sleep(0.2)
+    tdd.select_by_visible_text(const.TUNISAIR_AIRPORT.get(to_location))
+    sleep(0.1)
 
     self.find_element(By.CSS_SELECTOR, 'input[id=f_depart]').send_keys("17/08/2023")
-    sleep(0.1)
-    self.find_element(By.CSS_SELECTOR, 'input[id=f_inbound]').send_keys("17/08/2023")
-    sleep(0.1)
+    self.find_element(By.CSS_SELECTOR, 'input[id=f_inbound]').send_keys("26/09/2023")
     self.find_element(By.CSS_SELECTOR, 'a[class=calendarOKButton]').click()
-    sleep(0.1)
     self.find_element(By.CSS_SELECTOR, 'input[value=valider]').click()
-    print('done!')
 
-    # for i in range(1, 61):
-    #   xpath = f'//*[@id="input_list_res"]/option[{i}]'
-    #   name = self.find_element(By.XPATH, xpath).text
-    #   value = self.find_element(By.XPATH, xpath).get_attribute('value')
-    #   print(f'"{value}" "{name}" "{xpath}"', end="\n")
+    self.maximize_window()
+    try:
+      warning_message = WebDriverWait(self, 10).until(
+        Ec.presence_of_element_located((By.XPATH, '//*[@id="global-warning-message"]/div/ul/li/span'))
+      )
+      print(warning_message.text)
+    except TimeoutException:
+      print('the warning is not there... TimeOutException')
+    except NoSuchElementException:
+      print("the warning is not there... NoSuchElementException")
+
+    dtable = self.find_element(By.CSS_SELECTOR, 'table[id=calendar-table-outbound] tbody')
+    dtd_tags = dtable.find_elements(By.CLASS_NAME, 'calendarPerBound-fare')
+    dinfos = []
+    for dtag in dtd_tags:
+      date_section = dtag.find_element(By.CLASS_NAME, 'calendarPerBound-date-section')
+      date = dtag.find_element(By.CSS_SELECTOR, 'div.calendarPerBound-date').text.strip()
+      month = dtag.find_element(By.CSS_SELECTOR, 'div.calendarPerBound-month').text.strip()
+      try:
+        price_section = dtag.find_element(By.CSS_SELECTOR, 'div.fare-checkbox-label-content span.calendarPerBound-price span').text.strip()
+        #'div.fare-checkbox-label-content'
+        #'div.fare-checkbox-label-content span.calendarPerBound-price span'
+
+        dinfos.append({
+          'date': date,
+          'month': month,
+          'price': f'${price_section} USD'
+        })
+      except NoSuchElementException:
+        dinfos.append({
+          'date': date,
+          'month': month,
+          'price': 'NOT AVAILABLE'
+        })
+        continue
+    print(dinfos)
+
+    rtable = self.find_element(By.CSS_SELECTOR, 'table[id=calendar-table-inbound] tbody')
+    rtd_tags = rtable.find_elements(By.CLASS_NAME, 'calendarPerBound-fare')
+    rinfos = []
+    for rtag in rtd_tags:
+      date_section = rtag.find_element(By.CSS_SELECTOR, 'div.calendarPerBound-date-section div.calendarPerBound-dayOfWeek')
+      date = rtag.find_element(By.CSS_SELECTOR, 'div.calendarPerBound-date-section div.calendarPerBound-date').text.strip()
+      month = rtag.find_element(By.CSS_SELECTOR, 'div.calendarPerBound-date-section div.calendarPerBound-month').text.strip()
+      try:
+        price_section = rtag.find_element(By.CSS_SELECTOR, 'div.fare-checkbox-label-content span.calendarPerBound-price span').text.strip()
+        #'div.fare-checkbox-label-content'
+        #'div.fare-checkbox-label-content span.calendarPerBound-price span'
+
+        rinfos.append({
+          'date': date,
+          'month': month,
+          'price': f'${price_section} USD'
+        })
+      except NoSuchElementException:
+        rinfos.append({
+          'date': date,
+          'month': month,
+          'price': 'NOT AVAILABLE'
+        })
+        continue
+    print(rinfos)
