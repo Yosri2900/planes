@@ -1,5 +1,3 @@
-import selenium
-import pickle
 import aircanada.constants as const
 from time import sleep
 import undetected_chromedriver as uc
@@ -10,8 +8,8 @@ from selenium.webdriver.support import expected_conditions as Ec
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
-import re
 
 
 class AirCanBot(uc.Chrome):
@@ -42,11 +40,11 @@ class AirCanBot(uc.Chrome):
 
   def scrape_round_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
                         to_date: str = None):
-    all_cookies = self.get_cookies()
-    cookies_dict = {}
-    for cookie in all_cookies:
-      cookies_dict[cookie['name']] = cookie['value']
-    print(cookies_dict)
+    # all_cookies = self.get_cookies()
+    # cookies_dict = {}
+    # for cookie in all_cookies:
+    #   cookies_dict[cookie['name']] = cookie['value']
+    # print(cookies_dict)
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]').click()
     from_location = WebDriverWait(self, 3).until(
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
@@ -121,7 +119,7 @@ class AirCanBot(uc.Chrome):
               layovers.append((stopovers_airports.text, layovers_duration.text))
               num += 1
               num_2 += 1
-            except selenium.common.exceptions.NoSuchElementException:
+            except NoSuchElementException:
               num = 0
               num_2 = 1
               break
@@ -144,7 +142,7 @@ class AirCanBot(uc.Chrome):
       try:
         self.find_element(By.XPATH, '//*[@id="fareUpgradeLightBox"]/div/div/div/button').click()
         self.find_element(By.CSS_SELECTOR, 'button.no-style-btn').click()
-      except selenium.common.exceptions.NoSuchElementException:
+      except NoSuchElementException:
         pass
       return_title = WebDriverWait(self, 10).until(
         Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
@@ -169,7 +167,7 @@ class AirCanBot(uc.Chrome):
                 rlayovers.append((stopovers_airports.text, layovers_duration.text))
                 num += 1
                 num_2 += 1
-              except selenium.common.exceptions.NoSuchElementException:
+              except NoSuchElementException:
                 num = 0
                 num_2 = 1
                 break
