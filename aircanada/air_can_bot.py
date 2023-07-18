@@ -32,7 +32,7 @@ class AirCanBot(uc.Chrome):
       self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="17/08", to_date="26/09")
 
     elif self.trip_type == "One-way":
-      self.scrape_one_way_trip(start_airport="YUL", to_airport="TUN", from_date="26/08")
+      self.scrape_one_way_trip(start_airport="YUL", from_date="26/08")
 
     elif self.trip_type == "Multi-city/Stopover":
       print("TODO")
@@ -65,18 +65,24 @@ class AirCanBot(uc.Chrome):
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_destination_trip_1"]'))
     )
 
-    to_text = "Tuni"
-    for char in to_text:
-      to_location.send_keys(char)
-      sleep(0.5)
-    sleep(0.2)
-    self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
+    # to_text = "Tuni"
+    # for char in to_text:
+    #   to_location.send_keys(char)
+    #   sleep(0.5)
+    # sleep(0.2)
+    # self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
     # to_text = "CDG"
     # for char in to_text:
     #   to_location.send_keys(char)
     #   sleep(0.5)
     # sleep(0.2)
     # self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]').click()
+    to_text = "mad"
+    for char in to_text:
+      to_location.send_keys(char)
+      sleep(0.5)
+    sleep(0.2)
+    self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]').click()
 
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]').click()
     sleep(0.4)
@@ -85,12 +91,10 @@ class AirCanBot(uc.Chrome):
     # aircanada accepts DD/MM/YYYY, but YYYY is not necessary
     month_start = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-1"]')
     month_start.send_keys(from_date)
-    # print(f'from date: {from_date}')
-    # sleep(0.2)
+
     month_return = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1-formfield-2"]')
     month_return.send_keys(to_date)
-    # print(f'to date: {to_date}')
-    # sleep(0.1)
+
     select_period = self.find_element(By.XPATH, '//*[@id="bkmgFlights_travelDates_1_confirmDates"]')
     select_period.click()
     sleep(0.1)
@@ -104,8 +108,6 @@ class AirCanBot(uc.Chrome):
     print(f'title: {title.text}')
     dinfos = []
     rinfos = []
-    # dtickets = dict()
-    # ttickets = dict()
     if title.text == "Departing flight":
       #scraping details of flights
       ul_tag = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
@@ -135,9 +137,9 @@ class AirCanBot(uc.Chrome):
           tickets_price = ticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
           prices = [price.text for price in tickets_price]
           dinfos.append({
-            'Depart Time': depart_time,
-            'Arrival Time': arrival_time,
-            'Flight Duration': flight_duration,
+            'Depart Time': depart_time.text,
+            'Arrival Time': arrival_time.text,
+            'Flight Duration': flight_duration.text,
             'Layovers Infos': layovers,
             'Prices': prices
           })
@@ -191,9 +193,9 @@ class AirCanBot(uc.Chrome):
             rtickets_price = rticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
             rprices = [price.text for price in rtickets_price]
             rinfos.append({
-              'Depart Time': rdepart_time,
-              'Arrival Time': rarrival_time,
-              'Flight Duration': rflight_duration,
+              'Depart Time': rdepart_time.text,
+              'Arrival Time': rarrival_time.text,
+              'Flight Duration': rflight_duration.text,
               'Layovers Infos': rlayovers,
               'Prices': rprices
             })
@@ -202,11 +204,11 @@ class AirCanBot(uc.Chrome):
             rticket_number += 1
         print('Done!')
         return dinfos, rinfos
-      # return dictionaries here
+
       return dinfos, None
     return None, None
 
-  def scrape_one_way_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None):
+  def scrape_one_way_trip(self, start_airport: str = None, from_date: str = None):
     # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
     # self.__init__(trip_type="One-way")
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]').click()
@@ -234,7 +236,6 @@ class AirCanBot(uc.Chrome):
       to_location.send_keys(char)
       sleep(0.5)
     sleep(0.2)
-
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_destination_trip_1SearchResult0"]/abc-ripple/div').click()
     sleep(0.2)
 
@@ -250,6 +251,55 @@ class AirCanBot(uc.Chrome):
     sleep(0.1)
     # search flights
     self.find_element(By.XPATH, '//*[@id="bkmgFlights_findButton"]').click()
+    title = WebDriverWait(self, 10).until(
+      Ec.presence_of_element_located((By.TAG_NAME, 'h1'))
+    )
+    print(f'title: {title.text}')
+    dinfos = []
+    if title.text == "Departing flight":
+      # scraping details of flights
+      ul_tag = self.find_element(By.XPATH, '//*[@id="flightBlockWrapper"]/div[2]/div/ul')
+      tickets = ul_tag.find_elements(By.TAG_NAME, 'li')
+      if len(tickets) > 0:
+        ticket_number = 0
+        for ticket in tickets:
+          layovers = []
+          num: int = 0
+          num_2: int = 1
+          while True:
+            try:
+              layovers_duration = self.find_element(By.XPATH,
+                                                    f'//*[@id="flightBlockWrapper"]/div[2]/div/ul/li[{ticket_number + 1}]/flight-row/div/div/div/div[1]/bound-itinerary/div[3]/div/div/div[2]/div[{num_2}]/span/span[2]')
+              stopovers_airports = self.find_element(By.CSS_SELECTOR,
+                                                     f'span[id^=itineraryConnectingLocation_{num}_{ticket_number}]')
+              layovers.append((stopovers_airports.text, layovers_duration.text))
+              num += 1
+              num_2 += 1
+            except NoSuchElementException:
+              num = 0
+              num_2 = 1
+              break
+
+          depart_time = self.find_element(By.CSS_SELECTOR, f'div[id^=itineraryDepartTime_{ticket_number}]')
+          arrival_time = self.find_element(By.CSS_SELECTOR, f'div[id^=itineraryArrivalTime_{ticket_number}]')
+          flight_duration = self.find_element(By.CSS_SELECTOR,
+                                              f'span[id^=flightDuration_{ticket_number}] :nth-child(2)')
+
+          tickets_price = ticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
+          prices = [price.text for price in tickets_price]
+          dinfos.append({
+            'Depart Time': depart_time,
+            'Arrival Time': arrival_time,
+            'Flight Duration': flight_duration,
+            'Layovers Infos': layovers,
+            'Prices': prices
+          })
+
+          # print(
+          #   f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
+          ticket_number += 1
+        return dinfos
+    return None
 
   def scrape_multi_city_trip(self, start_airport: str = None, to_airport: str = None, from_date: str = None,
                              to_date: str = None):
