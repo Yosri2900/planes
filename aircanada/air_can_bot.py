@@ -29,10 +29,10 @@ class AirCanBot(uc.Chrome):
   def scrape(self):
 
     if self.trip_type == "Round-trip":
-      self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="17/08", to_date="26/09")
+      return self.scrape_round_trip(start_airport="YUL", to_airport="TUN", from_date="17/08", to_date="26/09")
 
     elif self.trip_type == "One-way":
-      self.scrape_one_way_trip(start_airport="YUL", from_date="26/08")
+      return self.scrape_one_way_trip(start_airport="YUL", from_date="26/08")
 
     elif self.trip_type == "Multi-city/Stopover":
       print("TODO")
@@ -45,7 +45,11 @@ class AirCanBot(uc.Chrome):
     # for cookie in all_cookies:
     #   cookies_dict[cookie['name']] = cookie['value']
     # print(cookies_dict)
-    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]').click()
+    # WebDriverWait(self, 20).until(Ec.invisibility_of_element((By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]')))
+    # WebDriverWait(self, 20).until(
+    #   Ec.element_to_be_clickable((By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]'))).click()
+    trip_type_btn = self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_R"]')
+    self.execute_script("arguments[0].click();", trip_type_btn)
     from_location = WebDriverWait(self, 3).until(
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
     )
@@ -144,13 +148,13 @@ class AirCanBot(uc.Chrome):
             'Prices': prices
           })
 
-          print(f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
+          # print(f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
           ticket_number += 1
 
       self.find_element(By.CSS_SELECTOR, 'button[id^="cabinBtnECO"]').click()
       sleep(0.2)
       self.find_element(By.CSS_SELECTOR, 'button.no-style-btn').click()
-      print("------Return Flights----------------")
+      # print("------Return Flights----------------")
       sleep(0.2)
       try:
         self.find_element(By.XPATH, '//*[@id="fareUpgradeLightBox"]/div/div/div/button').click()
@@ -199,19 +203,23 @@ class AirCanBot(uc.Chrome):
               'Layovers Infos': rlayovers,
               'Prices': rprices
             })
-            print(
-              f'departtime :{rdepart_time.text}, arrival_time: {rarrival_time.text}, flightduration: {rflight_duration.text}, {len(rlayovers)} stopovers: {rlayovers}, prices: {rprices}')
+            # print(
+            #   f'departtime :{rdepart_time.text}, arrival_time: {rarrival_time.text}, flightduration: {rflight_duration.text}, {len(rlayovers)} stopovers: {rlayovers}, prices: {rprices}')
             rticket_number += 1
-        print('Done!')
-        return dinfos, rinfos
-
+          # print('Done!')
+          self.quit()
+          return dinfos, rinfos
+      self.quit()
       return dinfos, None
+    self.quit()
     return None, None
 
   def scrape_one_way_trip(self, start_airport: str = None, from_date: str = None):
     # self.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + 't')
     # self.__init__(trip_type="One-way")
-    self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]').click()
+    trip_type_btn = self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]')
+    self.execute_script("arguments[0].click();", trip_type_btn)
+    # self.find_element(By.XPATH, '//*[@id="bkmgFlights_tripTypeSelector_O"]').click()
     from_location = WebDriverWait(self, 3).until(
       Ec.presence_of_element_located((By.XPATH, '//*[@id="bkmgFlights_origin_trip_1"]'))
     )
@@ -288,16 +296,16 @@ class AirCanBot(uc.Chrome):
           tickets_price = ticket.find_elements(By.CSS_SELECTOR, 'div[class=display-on-hover]')
           prices = [price.text for price in tickets_price]
           dinfos.append({
-            'Depart Time': depart_time,
-            'Arrival Time': arrival_time,
-            'Flight Duration': flight_duration,
+            'Depart Time': depart_time.text,
+            'Arrival Time': arrival_time.text,
+            'Flight Duration': flight_duration.text,
             'Layovers Infos': layovers,
             'Prices': prices
           })
-
           # print(
           #   f'departtime :{depart_time.text}, arrival_time: {arrival_time.text}, flightduration: {flight_duration.text}, {len(layovers)} stopovers: {layovers}, prices: {prices}')
           ticket_number += 1
+        print('Done!')
         return dinfos
     return None
 

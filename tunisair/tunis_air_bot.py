@@ -30,10 +30,10 @@ class TunisairBot(uc.Chrome):
   def scrape(self):
 
     if self.trip_type == "Round-trip":
-      self.scrape_round_trip(from_date="17/08/2023", to_date="26/09/2023")
+      return self.scrape_round_trip(from_date="17/08/2023", to_date="26/09/2023")
 
     elif self.trip_type == "One-way":
-      self.scrape_one_way_trip(from_date="17/08/2023", to_date="26/09/2023")
+      return self.scrape_one_way_trip(from_date="26/08/2023", to_date="15/09/2023")
 
     elif self.trip_type == "Multi-city/Stopover":
       print("TODO")
@@ -98,8 +98,7 @@ class TunisairBot(uc.Chrome):
           'price': 'NOT AVAILABLE'
         })
         continue
-    print(dinfos)
-    print('---------------------------Return Tickets---------------------------------')
+    # print(dinfos)
     rtable = self.find_element(By.CSS_SELECTOR, 'table[id=calendar-table-inbound] tbody')
     rtd_tags = rtable.find_elements(By.CLASS_NAME, 'calendarPerBound-fare')
     rinfos = []
@@ -128,14 +127,13 @@ class TunisairBot(uc.Chrome):
           'price': 'NOT AVAILABLE'
         })
         continue
-    print(rinfos)
     if warning_message != '':
       return dinfos, rinfos, warning_message.text
 
     return dinfos, rinfos
 
   def scrape_one_way_trip(self, from_location: str = None, to_location: str = None, from_date: str = None,
-                          to_date: str = None):
+                          to_date: str=None):
     self.find_element(By.XPATH, '//*[@id="lignesearch"]/input[1]').click()
     # This option can later be specified by the user
     from_location = "Montreal"
@@ -157,7 +155,7 @@ class TunisairBot(uc.Chrome):
     self.maximize_window()
     warning_message = ''
     try:
-      warning_message = WebDriverWait(self, 10).until(
+      warning_message = WebDriverWait(self, 15).until(
         Ec.presence_of_element_located((By.XPATH, '//*[@id="global-warning-message"]/div/ul/li/span'))
       )
       print(warning_message.text)
@@ -191,7 +189,6 @@ class TunisairBot(uc.Chrome):
           'price': 'NOT AVAILABLE'
         })
         continue
-    print(dinfos)
     if warning_message != '':
       return dinfos, warning_message
 
